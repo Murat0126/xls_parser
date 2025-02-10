@@ -1,0 +1,24 @@
+<input type="file" id="file-input">
+<button onclick="loadAndParseXLSX()">Load and parse XLS</button>
+
+<script type="module">
+    import init, { parse_xlsx_wasm } from "./pkg/valve_optimization.js";
+
+    async function loadAndParseXLSX() {
+        await init(); // Инициализация wasm
+
+        let file = document.getElementById("file-input").files[0];
+        if (!file) return alert("Выберите файл!");
+
+        let reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async () => {
+            let bytes = new Uint8Array(reader.result);
+            let jsonResult = parse_xlsx_wasm(bytes);
+            console.log("Результат:", JSON.parse(jsonResult));
+        };
+    }
+
+    // Делаем функцию доступной глобально
+    window.loadAndParseXLSX = loadAndParseXLSX;
+</script>

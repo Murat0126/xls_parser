@@ -47,7 +47,7 @@ fn parse_xlsx_from_bytes(data: &[u8]) -> Result<Vec<RowData>, String> {
 
         println!("Обрабатываем вкладку: {}", sheet_name);
 
-        for (index, row) in range.rows().take(10_000).enumerate() {
+        for (index, row) in range.rows().enumerate() {
             let id_cell = row.get(0);
     
             match id_cell {

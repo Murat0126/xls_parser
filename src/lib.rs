@@ -100,15 +100,10 @@ fn parse_xlsx_from_bytes(data: &[u8]) -> Result<HashMap<String, Vec<RowData>>, S
 
 ///==========================================Генерация Svg файла с расцветками ячеек от зеленого до красного цвета пока чо задано статичный размер холста 500х500=============================================
 
-// use std::fs::File;
-// use std::io::Write;
-
-
-
 #[wasm_bindgen]
 pub fn generate_svg_from_json(json_str: &str) -> String {
     let data_map: HashMap<String, Vec<RowData>> =
-        serde_json::from_str(json_str).unwrap_or_else(|_| HashMap::new());
+        serde_json::from_str(json_str).unwrap_or_default();
 
     let mut svg_list = String::new();
 
@@ -116,11 +111,19 @@ pub fn generate_svg_from_json(json_str: &str) -> String {
         let mut matrix: Vec<Vec<f64>> = Vec::new();
 
         for row in rows {
-            let  row_data = vec![
-                row.as1.iter().copied().sum::<f64>() / row.as1.len() as f64,
-                row.as2.iter().copied().sum::<f64>() / row.as2.len() as f64,
-                row.as3.iter().copied().sum::<f64>() / row.as3.len() as f64,
-                row.as4.iter().copied().sum::<f64>() / row.as4.len() as f64,
+            let row_data = vec![
+                if !row.as1.is_empty() {
+                    row.as1.iter().copied().sum::<f64>() / row.as1.len() as f64
+                } else { 0.0 },
+                if !row.as2.is_empty() {
+                    row.as2.iter().copied().sum::<f64>() / row.as2.len() as f64
+                } else { 0.0 },
+                if !row.as3.is_empty() {
+                    row.as3.iter().copied().sum::<f64>() / row.as3.len() as f64
+                } else { 0.0 },
+                if !row.as4.is_empty() {
+                    row.as4.iter().copied().sum::<f64>() / row.as4.len() as f64
+                } else { 0.0 },
             ];
             matrix.push(row_data);
         }
@@ -159,12 +162,23 @@ fn generate_svg(data: Vec<Vec<f64>>) -> String {
     svg
 }
 
-
-
 fn get_color(value: f64, min: f64, max: f64) -> String {
-    let ratio = (value - min) / (max - min);
-    let r = (255.0 * ratio) as u8;   // Красный оттенок
-    let g = (255.0 * (1.0 - ratio)) as u8; // Зелёный оттенок
-    format!("rgb({}, {}, 0)", r, g)
+    if max == min {
+        return "rgb(255, 255, 255)".to_string();  // Если все значения одинаковы
+    }
+
+    let ratio = (value - min) / (max - min);  // Нормализуем значение
+
+    // Переход от белого (rgb(255, 255, 255)) к желтому (rgb(255, 255, 0)) и к красному (rgb(255, 0, 0))
+    let r = (255.0 * ratio) as u8;   // Красный оттенок (плавно увеличивается)
+    let g = (255.0 * ratio) as u8;   // Зеленый оттенок (плавно увеличивается)
+    let b = 255 - (255.0 * ratio) as u8; // Синий оттенок (уменьшается)
+
+    // Плавный переход от белого через желтый к красному
+    format!("rgb({}, {}, {})", r, g, b)
 }
+
+
+
+
 

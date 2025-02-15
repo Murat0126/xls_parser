@@ -1,8 +1,9 @@
 <input type="file" id="file-input">
 <button onclick="loadAndParseXLSX()">Load and parse XLS</button>
+<div id="mosaicContainer" style="width: 500px; height: 500px;"></div>
 
 <script type="module">
-    import init, { parse_xlsx_wasm } from "./pkg/valve_optimization.js";
+    import init, { parse_xlsx_wasm, generate_svg_from_json } from "./pkg/valve_optimization.js";
 
     async function loadAndParseXLSX() {
         await init(); // Инициализация wasm
@@ -15,7 +16,21 @@
         reader.onload = async () => {
             let bytes = new Uint8Array(reader.result);
             let jsonResult = parse_xlsx_wasm(bytes);
-            console.log("Результат:", JSON.parse(jsonResult));
+
+            // Генерация SVG
+            const svgContent = generate_svg_from_json(jsonResult);
+
+            // Проверка SVG
+            console.log("SVG Content:", svgContent);
+
+            // Отображаем SVG
+            const container = document.getElementById("mosaicContainer");
+            container.innerHTML = svgContent;
+
+            // Дополнительно проверим на наличие ошибок
+            if (!svgContent.includes("<svg")) {
+                console.error("SVG not found in content");
+            }
         };
     }
 
